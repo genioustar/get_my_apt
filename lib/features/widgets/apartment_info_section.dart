@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../data/models/apartment.dart';
+import '../../data/models/apartment.dart';
 
 /// 아파트 기본 정보를 표시하는 섹션 위젯
 class ApartmentInfoSection extends StatelessWidget {

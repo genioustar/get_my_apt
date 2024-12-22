@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../data/models/apartment.dart';
+import '../../data/models/apartment.dart';
 
 /// 평가 차트와 평가 항목들을 표시하는 위젯
 class RatingChartSection extends StatelessWidget {

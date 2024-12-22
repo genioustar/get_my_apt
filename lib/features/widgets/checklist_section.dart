@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../data/models/apartment.dart';
+import '../../data/models/apartment.dart';
 
 /// 체크리스트 섹션을 표시하는 위젯
 class ChecklistSection extends StatelessWidget {

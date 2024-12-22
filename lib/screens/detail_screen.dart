@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get_my_apt/features/apartment/widgets/rating_chart_section.dart';
+import 'package:get_my_apt/features/widgets/rating_chart_section.dart';
 
 import '../data/models/apartment.dart';
 
