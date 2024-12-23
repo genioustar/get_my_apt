@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/apartment.dart';
 
 /// 평가 차트와 평가 항목들을 표시하는 위젯
-class RatingChartSection extends StatelessWidget {
+class RatingChartSection extends StatefulWidget {
   final Apartment apartment;
 
   const RatingChartSection({
@@ -12,7 +12,35 @@ class RatingChartSection extends StatelessWidget {
   });
 
   @override
+  State<RatingChartSection> createState() => _RatingChartSectionState();
+}
+
+class _RatingChartSectionState extends State<RatingChartSection> {
+  // 각 질문에 대한 선택된 답변을 저장하는 Map
+  final Map<String, String> selectedAnswers = {};
+
+  // 전체 평가 결과를 계산하는 메서드
+  Map<String, int> _calculateOverallRatings() {
+    Map<String, int> ratings = {'좋음': 0, '보통': 0, '나쁨': 0};
+
+    selectedAnswers.forEach((_, answer) {
+      if (answer == '좋아요' || answer == '없어요') {
+        ratings['좋음'] = ratings['좋음']! + 1;
+      } else if (answer == '보통이에요' || answer == '조금 있어요') {
+        ratings['보통'] = ratings['보통']! + 1;
+      } else if (answer == '나빠요' || answer == '많이 있어요') {
+        ratings['나쁨'] = ratings['나쁨']! + 1;
+      }
+    });
+
+    return ratings;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final ratings = _calculateOverallRatings();
+    final total = ratings.values.fold<int>(0, (sum, count) => sum + count);
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -23,9 +51,24 @@ class RatingChartSection extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          _buildRatingBar('좋음', 0.4, Colors.blue, '11'),
-          _buildRatingBar('보통', 0.5, Colors.green, '12'),
-          _buildRatingBar('나쁨', 0.1, Colors.red, '2'),
+          _buildRatingBar(
+            '좋음',
+            total > 0 ? ratings['좋음']! / total : 0,
+            Colors.blue,
+            ratings['좋음'].toString(),
+          ),
+          _buildRatingBar(
+            '보통',
+            total > 0 ? ratings['보통']! / total : 0,
+            Colors.green,
+            ratings['보통'].toString(),
+          ),
+          _buildRatingBar(
+            '나쁨',
+            total > 0 ? ratings['나쁨']! / total : 0,
+            Colors.red,
+            ratings['나쁨'].toString(),
+          ),
           const SizedBox(height: 24),
           _buildEvaluationQuestions(),
         ],
@@ -79,7 +122,7 @@ class RatingChartSection extends StatelessWidget {
         const SizedBox(height: 16),
         _buildEvaluationQuestion(
           '벽과 천정에 물이 새거나 곰팡이가 있나요?',
-          ['없어요', '조금 있어요', '많이 있어요'],
+          ['많이 있어요', '조금 있어요', '없어요'],
         ),
         const SizedBox(height: 16),
         _buildEvaluationQuestion(
@@ -104,20 +147,42 @@ class RatingChartSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Row(
-          children: options
-              .map((option) => Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: OutlinedButton(
-                        onPressed: () {},
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.grey),
-                        ),
-                        child: Text(option),
-                      ),
-                    ),
-                  ))
-              .toList(),
+          children: options.map((option) {
+            final bool isSelected = selectedAnswers[question] == option;
+            Color? backgroundColor;
+            Color textColor = isSelected ? Colors.white : Colors.black;
+
+            // 선택된 경우의 배경색 설정
+            if (isSelected) {
+              if (option == '좋아요' || option == '없어요') {
+                backgroundColor = Colors.blue;
+              } else if (option == '보통이에요' || option == '조금 있어요') {
+                backgroundColor = Colors.green;
+              } else if (option == '나빠요' || option == '많이 있어요') {
+                backgroundColor = Colors.red;
+              }
+            }
+
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: OutlinedButton(
+                  onPressed: () {
+                    setState(() {
+                      selectedAnswers[question] = option;
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                        color: isSelected ? Colors.transparent : Colors.grey),
+                    backgroundColor: backgroundColor,
+                    foregroundColor: textColor,
+                  ),
+                  child: Text(option),
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
