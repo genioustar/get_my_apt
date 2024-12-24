@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get_my_apt/data/services/apartment_storage_service.dart';
 import 'package:get_my_apt/screens/detail_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ApartmentStorageService.init();
   runApp(const MyApp());
 }
 

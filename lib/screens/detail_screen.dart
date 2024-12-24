@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get_my_apt/core/utils/logger.dart';
+import 'package:get_my_apt/data/services/apartment_storage_service.dart';
 import 'package:get_my_apt/features/widgets/apartment_info_section.dart';
 import 'package:get_my_apt/features/widgets/checklist_section.dart';
 import 'package:get_my_apt/features/widgets/rating_chart_section.dart';
@@ -17,7 +19,7 @@ final _sampleApartment = Apartment(
   description: '즉시 입주 가능함...',
   images: List.generate(6, (index) => 'image_$index.jpg'),
   checklist: {
-    '전체': 25,
+    '전체': 251,
     '실내': 3,
     '친환': 0,
     '주방': 5,
@@ -36,26 +38,96 @@ final _sampleApartment = Apartment(
   ratingCounts: {'좋음': 11, '보통': 12, '나쁨': 2},
 );
 
-class ApartmentDetailScreen extends StatelessWidget {
+class ApartmentDetailScreen extends StatefulWidget {
   const ApartmentDetailScreen({super.key});
+
+  @override
+  State<ApartmentDetailScreen> createState() => _ApartmentDetailScreenState();
+}
+
+class _ApartmentDetailScreenState extends State<ApartmentDetailScreen>
+    with LoggerMixin {
+  Apartment? _apartment;
+
+  void _loadApartment() {
+    try {
+      final apartment =
+          ApartmentStorageService.loadApartment('서울 송파구 잠실동 101-1');
+      logger.i('로드된 아파트 데이터: ${apartment?.name ?? "없음"}');
+
+      setState(() {
+        _apartment = apartment ?? _sampleApartment;
+      });
+    } catch (e, stackTrace) {
+      logger.e('아파트 데이터 로드 실패', error: e, stackTrace: stackTrace);
+      setState(() {
+        _apartment = _sampleApartment;
+      });
+    }
+  }
+
+  Future<void> _saveApartment() async {
+    if (!mounted) return;
+
+    try {
+      await ApartmentStorageService.saveApartment(_sampleApartment);
+      logger.i('아파트 정보 저장 완료: ${_sampleApartment.name}');
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('아파트 정보가 저장되었습니다')),
+      );
+    } catch (e, stackTrace) {
+      logger.e('아파트 저장 실패', error: e, stackTrace: stackTrace);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('저장 중 오류가 발생했습니다: ${e.toString()}')),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    logger.d('DetailScreen initState 호출');
+    _loadApartment();
+  }
+
+  @override
+  void dispose() {
+    logger.d('DetailScreen dispose 호출');
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ApartmentInfoSection(apartment: _sampleApartment),
-              EvaluationSection(),
-              ImageGridSection(),
-              ChecklistSection(apartment: _sampleApartment),
-              RatingChartSection(apartment: _sampleApartment),
-            ],
+      appBar: AppBar(
+        title: const Text('아파트 상세'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _saveApartment,
           ),
-        ),
+        ],
       ),
+      body: _apartment == null
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ApartmentInfoSection(apartment: _apartment!),
+                    EvaluationSection(),
+                    ImageGridSection(),
+                    ChecklistSection(apartment: _apartment!),
+                    RatingChartSection(apartment: _apartment!),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 }
