@@ -30,13 +30,14 @@ class ApartmentAdapter extends TypeAdapter<Apartment> {
       checklist: (fields[10] as Map).cast<String, int>(),
       ratings: (fields[11] as Map).cast<String, double>(),
       ratingCounts: (fields[12] as Map).cast<String, int>(),
+      evaluationAnswers: (fields[13] as Map).cast<String, String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Apartment obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -62,7 +63,9 @@ class ApartmentAdapter extends TypeAdapter<Apartment> {
       ..writeByte(11)
       ..write(obj.ratings)
       ..writeByte(12)
-      ..write(obj.ratingCounts);
+      ..write(obj.ratingCounts)
+      ..writeByte(13)
+      ..write(obj.evaluationAnswers);
   }
 
   @override

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:get_my_apt/data/services/apartment_storage_service.dart';
 import 'package:get_my_apt/screens/detail_screen.dart';
+import 'package:get_my_apt/services/evaluation_service.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await ApartmentStorageService.init();
+  await Hive.initFlutter();
+  await EvaluationService.initialize();
   runApp(const MyApp());
 }
 

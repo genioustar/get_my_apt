@@ -43,6 +43,9 @@ class Apartment extends HiveObject {
   @HiveField(12)
   final Map<String, int> ratingCounts;
 
+  @HiveField(13)
+  final Map<String, String> evaluationAnswers;
+
   Apartment({
     required this.name,
     required this.address,
@@ -57,5 +60,6 @@ class Apartment extends HiveObject {
     required this.checklist,
     required this.ratings,
     required this.ratingCounts,
+    this.evaluationAnswers = const {},
   });
 }

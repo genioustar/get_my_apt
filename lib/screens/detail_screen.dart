@@ -36,6 +36,7 @@ final _sampleApartment = Apartment(
   },
   ratings: {'좋음': 0.4, '보통': 0.5, '나쁨': 0.1},
   ratingCounts: {'좋음': 11, '보통': 12, '나쁨': 2},
+  evaluationAnswers: {},
 );
 
 class ApartmentDetailScreen extends StatefulWidget {
