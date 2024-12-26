@@ -22,21 +22,23 @@ class ChecklistSection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildCheckItem('전체', apartment.checklist['전체'].toString()),
+                // 카운트 값이 아님 초기 값 세팅하거나 값 가져오게 변경
+                // apartment.checklist.toString()
+                _buildCheckItem('전체'),
                 const SizedBox(width: 12),
-                _buildCheckItem('실내', apartment.checklist['실내'].toString()),
+                _buildCheckItem('실내'),
                 const SizedBox(width: 12),
-                _buildCheckItem('친환', apartment.checklist['친환'].toString()),
+                _buildCheckItem('친환'),
                 const SizedBox(width: 12),
-                _buildCheckItem('주방', apartment.checklist['주방'].toString()),
+                _buildCheckItem('주방'),
                 const SizedBox(width: 12),
-                _buildCheckItem('거실', apartment.checklist['거실'].toString()),
+                _buildCheckItem('거실'),
                 const SizedBox(width: 12),
-                _buildCheckItem('침실', apartment.checklist['침실'].toString()),
+                _buildCheckItem('침실'),
                 const SizedBox(width: 12),
-                _buildCheckItem('화장실', apartment.checklist['화장실'].toString()),
+                _buildCheckItem('화장실'),
                 const SizedBox(width: 12),
-                _buildCheckItem('현관', apartment.checklist['현관'].toString()),
+                _buildCheckItem('현관'),
               ],
             ),
           ),
@@ -45,7 +47,7 @@ class ChecklistSection extends StatelessWidget {
     );
   }
 
-  Widget _buildCheckItem(String label, String count) {
+  Widget _buildCheckItem(String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -57,7 +59,6 @@ class ChecklistSection extends StatelessWidget {
         children: [
           Text(label),
           const SizedBox(width: 8),
-          Text(count, style: const TextStyle(color: Colors.blue)),
         ],
       ),
     );

@@ -27,7 +27,7 @@ class ApartmentAdapter extends TypeAdapter<Apartment> {
       rating: fields[7] as double,
       description: fields[8] as String,
       images: (fields[9] as List).cast<String>(),
-      checklist: (fields[10] as Map).cast<String, int>(),
+      checklist: (fields[10] as List).cast<String>(),
       ratings: (fields[11] as Map).cast<String, double>(),
       ratingCounts: (fields[12] as Map).cast<String, int>(),
       evaluationAnswers: (fields[13] as Map).cast<String, String>(),

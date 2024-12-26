@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get_my_apt/screens/detail_screen.dart';
+import 'package:get_my_apt/screens/first_page.dart';
 import 'package:get_my_apt/services/evaluation_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const ApartmentDetailScreen(),
+      home: const FirstPage(),
     );
   }
 }

@@ -18,29 +18,34 @@ final _sampleApartment = Apartment(
   rating: 4.0,
   description: '즉시 입주 가능함...',
   images: List.generate(6, (index) => 'image_$index.jpg'),
-  checklist: {
-    '전체': 251,
-    '실내': 3,
-    '친환': 0,
-    '주방': 5,
-    '현관': 2,
-    '거실': 4,
-    '침실': 3,
-    '화장실': 2,
-    '발코니': 1,
-    '보안': 3,
-    '주차': 2,
-    '교통': 4,
-    '편의시설': 3,
-    '학군': 2,
-  },
+  checklist: [
+    '전체',
+    '실내',
+    '친환',
+    '주방',
+    '현관',
+    '거실',
+    '침실',
+    '화장실',
+    '발코니',
+    '보안',
+    '주차',
+    '교통',
+    '편의시설',
+    '학군',
+  ],
   ratings: {'좋음': 0.4, '보통': 0.5, '나쁨': 0.1},
   ratingCounts: {'좋음': 11, '보통': 12, '나쁨': 2},
   evaluationAnswers: {},
 );
 
 class ApartmentDetailScreen extends StatefulWidget {
-  const ApartmentDetailScreen({super.key});
+  final Apartment apartment;
+
+  const ApartmentDetailScreen({
+    super.key,
+    required this.apartment,
+  });
 
   @override
   State<ApartmentDetailScreen> createState() => _ApartmentDetailScreenState();
@@ -48,7 +53,13 @@ class ApartmentDetailScreen extends StatefulWidget {
 
 class _ApartmentDetailScreenState extends State<ApartmentDetailScreen>
     with LoggerMixin {
-  Apartment? _apartment;
+  late Apartment _apartment;
+
+  @override
+  void initState() {
+    super.initState();
+    _apartment = widget.apartment;
+  }
 
   void _loadApartment() {
     try {
@@ -89,13 +100,6 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen>
   }
 
   @override
-  void initState() {
-    super.initState();
-    logger.d('DetailScreen initState 호출');
-    _loadApartment();
-  }
-
-  @override
   void dispose() {
     logger.d('DetailScreen dispose 호출');
     super.dispose();
@@ -120,11 +124,11 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ApartmentInfoSection(apartment: _apartment!),
+                    ApartmentInfoSection(apartment: _apartment),
                     EvaluationSection(),
                     ImageGridSection(),
-                    ChecklistSection(apartment: _apartment!),
-                    RatingChartSection(apartment: _apartment!),
+                    ChecklistSection(apartment: _apartment),
+                    RatingChartSection(apartment: _apartment),
                   ],
                 ),
               ),

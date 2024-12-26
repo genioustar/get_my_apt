@@ -35,7 +35,7 @@ class Apartment extends HiveObject {
   final List<String> images;
 
   @HiveField(10)
-  final Map<String, int> checklist;
+  final List<String> checklist;
 
   @HiveField(11)
   final Map<String, double> ratings;
@@ -62,4 +62,38 @@ class Apartment extends HiveObject {
     required this.ratingCounts,
     this.evaluationAnswers = const {},
   });
+
+  Apartment copyWith({
+    String? name,
+    String? address,
+    String? price,
+    String? maintenanceFee,
+    String? size,
+    String? rooms,
+    String? floor,
+    double? rating,
+    String? description,
+    List<String>? images,
+    List<String>? checklist,
+    Map<String, double>? ratings,
+    Map<String, int>? ratingCounts,
+    Map<String, String>? evaluationAnswers,
+  }) {
+    return Apartment(
+      name: name ?? this.name,
+      address: address ?? this.address,
+      price: price ?? this.price,
+      maintenanceFee: maintenanceFee ?? this.maintenanceFee,
+      size: size ?? this.size,
+      rooms: rooms ?? this.rooms,
+      floor: floor ?? this.floor,
+      rating: rating ?? this.rating,
+      description: description ?? this.description,
+      images: images ?? this.images,
+      checklist: checklist ?? this.checklist,
+      ratings: ratings ?? this.ratings,
+      ratingCounts: ratingCounts ?? this.ratingCounts,
+      evaluationAnswers: evaluationAnswers ?? this.evaluationAnswers,
+    );
+  }
 }
