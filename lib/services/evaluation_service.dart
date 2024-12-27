@@ -6,6 +6,7 @@ import 'package:hive/hive.dart';
 import '../data/models/apartment.dart';
 import '../data/models/evaluation_questions.dart';
 
+/// 평가 관련 기능을 처리하는 서비스 클래스입니다.
 class EvaluationService {
   static Map<String, List<String>>? _cachedQuestions;
 
@@ -34,47 +35,29 @@ class EvaluationService {
 
   /// JSON 파일에서 평가 질문 데이터를 로드합니다.
   static Future<EvaluationQuestions> loadEvaluationQuestions() async {
-    try {
-      final String jsonString =
-          await rootBundle.loadString('assets/evaluation_list.json');
-      final json = jsonDecode(jsonString);
-      return EvaluationQuestions.fromJson(json);
-    } catch (e) {
-      throw Exception('평가 질문을 로드하는 중 오류가 발생했습니다: $e');
-    }
+    // assets 폴더의 JSON 파일을 읽어옵니다.
+    final String jsonString =
+        await rootBundle.loadString('assets/evaluation_list.json');
+    final json = jsonDecode(jsonString);
+    return EvaluationQuestions.fromJson(json);
   }
 
   /// 아파트 객체에 초기 평가 질문을 설정합니다.
   static Future<void> initializeApartmentEvaluation(Apartment apartment) async {
     try {
       final evaluationQuestions = await loadEvaluationQuestions();
+      // 각 질문에 대한 기본 답변을 빈 문자열로 초기화합니다.
+      final initialAnswers = Map<String, String>.fromIterable(
+        evaluationQuestions.questions.keys,
+        value: (key) => '',
+      );
 
-      // 이미 평가 답변이 있는 경우 초기화하지 않음
-      if (apartment.evaluationAnswers.isNotEmpty) return;
-
-      final Map<String, String> initialAnswers = {};
-      evaluationQuestions.questions.forEach((question, _) {
-        initialAnswers[question] = ''; // 빈 문자열로 초기화
-      });
-
-      final updatedApartment = Apartment(
-        name: apartment.name,
-        address: apartment.address,
-        price: apartment.price,
-        maintenanceFee: apartment.maintenanceFee,
-        size: apartment.size,
-        rooms: apartment.rooms,
-        floor: apartment.floor,
-        rating: apartment.rating,
-        description: apartment.description,
-        images: apartment.images,
-        checklist: apartment.checklist,
-        ratings: apartment.ratings,
-        ratingCounts: apartment.ratingCounts,
+      // 업데이트된 아파트 정보를 저장합니다.
+      final updatedApartment = apartment.copyWith(
         evaluationAnswers: initialAnswers,
       );
 
-      final box = await Hive.openBox<Apartment>('apartments');
+      final box = Hive.box<Apartment>('apartments');
       await box.put(apartment.key, updatedApartment);
     } catch (e) {
       throw Exception('평가 초기화 중 오류가 발생했습니다: $e');

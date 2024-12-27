@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_my_apt/core/utils/logger.dart';
 import 'package:get_my_apt/screens/detail_screen.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import '../data/models/apartment.dart';
 
@@ -13,73 +13,40 @@ class FirstPage extends StatefulWidget {
 }
 
 class _FirstPageState extends State<FirstPage> with LoggerMixin {
+  // 아파트 목록을 저장하는 리스트
+  List<Apartment> _apartments = [];
+  // 데이터 로딩 상태를 표시하는 플래그
   bool _isLoading = true;
-  List<Apartment> _recentApartments = [];
-  final _sampleApartment = Apartment(
-    name: '[예시] 재건축 일동 우성아파트',
-    address: '서울 송파구 잠실동 101-1',
-    price: '7억',
-    maintenanceFee: '350,000원',
-    size: '42평(141m²)',
-    rooms: '4개, 화장실 2개',
-    floor: '현재 11층/전체 12층 중 2층',
-    rating: 4.0,
-    description: '즉시 입주 가능함...',
-    images: List.generate(6, (index) => 'image_$index.jpg'),
-    checklist: [
-      '전체',
-      '실내',
-      '친환',
-      '주방',
-      '현관',
-      '거실',
-      '침실',
-      '화장실',
-      '발코니',
-      '보안',
-      '주차',
-      '교통',
-      '편의시설',
-      '학군',
-    ],
-    ratings: {'좋음': 0.4, '보통': 0.5, '나쁨': 0.1},
-    ratingCounts: {'좋음': 11, '보통': 12, '나쁨': 2},
-    evaluationAnswers: {},
-  );
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadApartments();
   }
 
-  Future<void> _loadData() async {
+  // Hive 데이터베이스에서 아파트 데이터를 불러오는 함수
+  Future<void> _loadApartments() async {
     try {
-      // 최근 본 아파트 목록 로드
+      setState(() => _isLoading = true);
+
+      // Hive 박스 열기
       final box = await Hive.openBox<Apartment>('apartments');
-      final recentApts = box.values.toList();
+      logger.i('Hive 박스 열기 성공. 총 데이터 수: ${box.length}');
 
       setState(() {
-        _recentApartments = recentApts;
+        // 모든 데이터를 리스트로 변환 (reversed 제거)
+        _apartments = box.values.toList();
         _isLoading = false;
       });
+
+      logger.i('아파트 데이터 로드 완료: ${_apartments.length}개');
     } catch (e, stackTrace) {
-      logger.e('데이터 로드 실패', error: e, stackTrace: stackTrace);
-      setState(() {
-        _isLoading = false;
-      });
+      logger.e('아파트 데이터 로드 실패', error: e, stackTrace: stackTrace);
+      setState(() => _isLoading = false);
     }
   }
 
-  void _navigateToDetail(Apartment apartment) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ApartmentDetailScreen(apartment: apartment),
-      ),
-    );
-  }
-
+  // 새로운 빈 아파트 객체를 생성하는 함수
   Apartment _createEmptyApartment() {
     return Apartment(
       name: '',
@@ -93,10 +60,35 @@ class _FirstPageState extends State<FirstPage> with LoggerMixin {
       description: '',
       images: [],
       checklist: [],
-      ratings: {},
-      ratingCounts: {},
+      // 평가 관련 초기값 설정
+      ratings: {'좋음': 0.0, '보통': 0.0, '나쁨': 0.0},
+      ratingCounts: {'좋음': 0, '보통': 0, '나쁨': 0},
       evaluationAnswers: {},
     );
+  }
+
+  // 아파트 데이터를 삭제하는 함수
+  Future<void> _deleteApartment(Apartment apartment) async {
+    try {
+      final box = await Hive.openBox<Apartment>('apartments');
+      // storageKey를 사용하여 데이터 삭제
+      await box.delete(apartment.storageKey);
+      await _loadApartments();
+
+      if (!mounted) return;
+      // 삭제 성공 메시지 표시
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('매물이 삭제되었습니다')),
+      );
+    } catch (e, stackTrace) {
+      logger.e('매물 삭제 실패', error: e, stackTrace: stackTrace);
+
+      if (!mounted) return;
+      // 삭제 실패 메시지 표시
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('삭제 중 오류가 발생했습니다')),
+      );
+    }
   }
 
   @override
@@ -105,12 +97,14 @@ class _FirstPageState extends State<FirstPage> with LoggerMixin {
       appBar: AppBar(
         title: const Text('내 아파트 구하기'),
       ),
+      // 로딩 중이면 로딩 표시기를 보여주고, 아니면 탭 뷰를 표시
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : DefaultTabController(
               length: 2,
               child: Column(
                 children: [
+                  // 상단 탭바 (리스트/지도 뷰 전환)
                   const TabBar(
                     tabs: [
                       Tab(text: '리스트로 보기'),
@@ -118,20 +112,124 @@ class _FirstPageState extends State<FirstPage> with LoggerMixin {
                     ],
                     labelColor: Colors.black,
                   ),
+                  // 탭 내용
                   Expanded(
                     child: TabBarView(
                       children: [
-                        // 리스트 뷰
-                        ListView(
-                          children: [
-                            // 예시 아파트
-                            _buildApartmentCard(_sampleApartment, true),
-                            // 저장된 아파트들
-                            ..._recentApartments
-                                .map((apt) => _buildApartmentCard(apt, false)),
-                          ],
+                        // 리스트 뷰 - 당겨서 새로��침 가능
+                        RefreshIndicator(
+                          onRefresh: _loadApartments,
+                          child: _apartments.isEmpty
+                              ? const Center(child: Text('등록된 매물이 없습니다'))
+                              : ListView.builder(
+                                  reverse: false,
+                                  padding: const EdgeInsets.only(
+                                    left: 16,
+                                    right: 16,
+                                    top: 16,
+                                    // FAB 높이만큼 bottom padding 추가
+                                    bottom: 80,
+                                  ),
+                                  itemCount: _apartments.length,
+                                  itemBuilder: (context, index) {
+                                    final apartment = _apartments[index];
+                                    return Dismissible(
+                                      key: Key(apartment.address),
+                                      background: Container(
+                                        color: Colors.red,
+                                        alignment: Alignment.centerRight,
+                                        child: const Icon(
+                                          Icons.delete,
+                                          color: Colors.white,
+                                          size: 30,
+                                        ),
+                                      ),
+                                      direction: DismissDirection.endToStart,
+                                      confirmDismiss: (direction) async {
+                                        return await showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: const Text('매물 삭제'),
+                                              content: Text(
+                                                  '${apartment.name}을(를) 삭제하시겠습니까?'),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(false),
+                                                  child: const Text('취소'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(true),
+                                                  child: const Text(
+                                                    '삭제',
+                                                    style: TextStyle(
+                                                        color: Colors.red),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                      onDismissed: (direction) {
+                                        _deleteApartment(apartment);
+                                      },
+                                      child: Card(
+                                        elevation: 2,
+                                        margin:
+                                            const EdgeInsets.only(bottom: 1),
+                                        shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.zero,
+                                        ),
+                                        child: InkWell(
+                                          onTap: () async {
+                                            await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ApartmentDetailScreen(
+                                                  apartment: apartment,
+                                                  isNewApartment: false,
+                                                ),
+                                              ),
+                                            );
+                                            _loadApartments();
+                                          },
+                                          child: Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  apartment.name,
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                Text(apartment.address),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '${apartment.price} / 관리비 ${apartment.maintenanceFee}',
+                                                  style: const TextStyle(
+                                                      color: Colors.blue),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
                         ),
-                        // 지도 뷰 (추후 구현)
+                        // 지도 뷰 (미구현)
                         const Center(child: Text('지도 준비중')),
                       ],
                     ),
@@ -139,75 +237,31 @@ class _FirstPageState extends State<FirstPage> with LoggerMixin {
                 ],
               ),
             ),
+      // 하단 플로팅 버튼 - 새로운 매물 추가
       floatingActionButton: Container(
         width: double.infinity,
         margin: const EdgeInsets.symmetric(horizontal: 16),
         child: FloatingActionButton.extended(
           backgroundColor: Colors.deepPurple,
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            // 새로운 매물 등록 화면으로 이동
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ApartmentDetailScreen(
                   apartment: _createEmptyApartment(),
-                  // isNewApartment: true,
+                  isNewApartment: true,
                 ),
               ),
             );
+            // 새로운 매물이 추가되었을 수 있으므로 목록 새로고침
+            _loadApartments();
           },
-          label: const Text(
-            '새로운 매물 체크',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          icon: const Icon(
-            Icons.search,
-            color: Colors.white,
-          ),
+          label: const Text('새로운 매물 체크'),
+          icon: const Icon(Icons.search),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-    );
-  }
-
-  Widget _buildApartmentCard(Apartment apartment, bool isSample) {
-    return Card(
-      margin: const EdgeInsets.all(8),
-      child: InkWell(
-        onTap: () => _navigateToDetail(apartment),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListTile(
-              title: Text(
-                apartment.name,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text('${apartment.address}\n${apartment.price}'),
-              trailing: Text(
-                isSample ? '예시' : DateTime.now().toString().substring(0, 16),
-                style: TextStyle(
-                  color: isSample ? Colors.blue : Colors.grey,
-                ),
-              ),
-            ),
-            if (apartment.evaluationAnswers.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.thumb_up, color: Colors.blue),
-                    const SizedBox(width: 8),
-                    Text('좋음 ${apartment.ratings['좋음']! * 100}%'),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

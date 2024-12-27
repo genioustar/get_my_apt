@@ -2,13 +2,15 @@ import 'package:hive/hive.dart';
 
 part 'apartment.g.dart';
 
+// Hive 데이터베이스에서 사용할 모델 클래스입니다.
 @HiveType(typeId: 0)
 class Apartment extends HiveObject {
+  // 각 필드에 HiveField 어노테이션을 추가하여 데이터베이스 저장 방식을 정의합니다.
   @HiveField(0)
-  final String name;
+  final String name; // 아파트 이름
 
   @HiveField(1)
-  final String address;
+  final String address; // 주소
 
   @HiveField(2)
   final String price;
@@ -46,6 +48,7 @@ class Apartment extends HiveObject {
   @HiveField(13)
   final Map<String, String> evaluationAnswers;
 
+  // 생성자: 아파트 객체를 생성할 때 필요한 모든 정보를 받습니다.
   Apartment({
     required this.name,
     required this.address,
@@ -63,6 +66,7 @@ class Apartment extends HiveObject {
     this.evaluationAnswers = const {},
   });
 
+  // 기존 객체를 기반으로 새로운 객체를 생성하는 메서드
   Apartment copyWith({
     String? name,
     String? address,
@@ -96,4 +100,7 @@ class Apartment extends HiveObject {
       evaluationAnswers: evaluationAnswers ?? this.evaluationAnswers,
     );
   }
+
+  // 고유 키를 생성하는 getter 추가
+  String get storageKey => '$name#$address';
 }

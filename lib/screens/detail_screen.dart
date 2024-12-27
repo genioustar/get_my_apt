@@ -1,50 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:get_my_apt/core/utils/logger.dart';
-import 'package:get_my_apt/data/services/apartment_storage_service.dart';
 import 'package:get_my_apt/features/widgets/apartment_info_section.dart';
 import 'package:get_my_apt/features/widgets/checklist_section.dart';
 import 'package:get_my_apt/features/widgets/rating_chart_section.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import '../data/models/apartment.dart';
 
-final _sampleApartment = Apartment(
-  name: '[예시] 재건축 일동 우성아파트',
-  address: '서울 송파구 잠실동 101-1',
-  price: '7억',
-  maintenanceFee: '350,000원',
-  size: '42평(141m²)',
-  rooms: '4개, 화장실 2개',
-  floor: '현재 11층/전체 12층 중 2층',
-  rating: 4.0,
-  description: '즉시 입주 가능함...',
-  images: List.generate(6, (index) => 'image_$index.jpg'),
-  checklist: [
-    '전체',
-    '실내',
-    '친환',
-    '주방',
-    '현관',
-    '거실',
-    '침실',
-    '화장실',
-    '발코니',
-    '보안',
-    '주차',
-    '교통',
-    '편의시설',
-    '학군',
-  ],
-  ratings: {'좋음': 0.4, '보통': 0.5, '나쁨': 0.1},
-  ratingCounts: {'좋음': 11, '보통': 12, '나쁨': 2},
-  evaluationAnswers: {},
-);
-
+/// 아파트 상세 정보를 보여주는 화면입니다.
 class ApartmentDetailScreen extends StatefulWidget {
-  final Apartment apartment;
+  final Apartment apartment; // 표시할 아파트 정보
+  final bool isNewApartment; // 새로운 매물인지 여부
 
   const ApartmentDetailScreen({
     super.key,
     required this.apartment,
+    this.isNewApartment = false,
   });
 
   @override
@@ -53,7 +24,7 @@ class ApartmentDetailScreen extends StatefulWidget {
 
 class _ApartmentDetailScreenState extends State<ApartmentDetailScreen>
     with LoggerMixin {
-  late Apartment _apartment;
+  late Apartment _apartment; // 현재 표시중인 아파트 정보
 
   @override
   void initState() {
@@ -61,29 +32,30 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen>
     _apartment = widget.apartment;
   }
 
-  void _loadApartment() {
+  void _loadApartment() async {
     try {
-      final apartment =
-          ApartmentStorageService.loadApartment('서울 송파구 잠실동 101-1');
-      logger.i('로드된 아파트 데이터: ${apartment?.name ?? "없음"}');
+      final box = await Hive.openBox<Apartment>('apartments');
+      final apartment = box.get(_apartment.storageKey);
 
-      setState(() {
-        _apartment = apartment ?? _sampleApartment;
-      });
+      if (mounted && apartment != null) {
+        setState(() {
+          _apartment = apartment;
+        });
+      }
+      logger.i('로드된 아파트 데이터: ${apartment?.name ?? "없음"}');
     } catch (e, stackTrace) {
       logger.e('아파트 데이터 로드 실패', error: e, stackTrace: stackTrace);
-      setState(() {
-        _apartment = _sampleApartment;
-      });
     }
   }
 
+  /// 아파트 정보를 Hive에 저장하는 메서드
   Future<void> _saveApartment() async {
     if (!mounted) return;
 
     try {
-      await ApartmentStorageService.saveApartment(_sampleApartment);
-      logger.i('아파트 정보 저장 완료: ${_sampleApartment.name}');
+      final box = await Hive.openBox<Apartment>('apartments');
+      await box.put(_apartment.storageKey, _apartment);
+      logger.i('아파트 정보 저장 완료: ${_apartment.name}');
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -99,10 +71,10 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen>
     }
   }
 
-  @override
-  void dispose() {
-    logger.d('DetailScreen dispose 호출');
-    super.dispose();
+  void _onApartmentUpdated(Apartment newApartment) {
+    setState(() {
+      _apartment = newApartment;
+    });
   }
 
   @override
@@ -117,22 +89,24 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen>
           ),
         ],
       ),
-      body: _apartment == null
-          ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ApartmentInfoSection(apartment: _apartment),
-                    EvaluationSection(),
-                    ImageGridSection(),
-                    ChecklistSection(apartment: _apartment),
-                    RatingChartSection(apartment: _apartment),
-                  ],
-                ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ApartmentInfoSection(
+                apartment: _apartment,
+                isNewApartment: widget.isNewApartment,
+                onApartmentUpdated: _onApartmentUpdated,
               ),
-            ),
+              const EvaluationSection(),
+              const ImageGridSection(),
+              ChecklistSection(apartment: _apartment),
+              RatingChartSection(apartment: _apartment),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -183,7 +157,6 @@ class ImageGridSection extends StatelessWidget {
       itemBuilder: (context, index) {
         return Container(
           color: Colors.grey[200],
-          // 실제 이미지는 Image.network() 등으로 구현
         );
       },
     );
