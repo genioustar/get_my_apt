@@ -25,6 +25,7 @@ class _RatingChartSectionState extends State<RatingChartSection> {
   @override
   void initState() {
     super.initState();
+    print('현재 평가 답변: ${widget.apartment.evaluationAnswers}');
     selectedAnswers = widget.apartment.evaluationAnswers;
     _initializeEvaluation();
   }
