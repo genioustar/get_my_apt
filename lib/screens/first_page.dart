@@ -4,6 +4,7 @@ import 'package:get_my_apt/screens/detail_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../data/models/apartment.dart';
+import '../services/evaluation_service.dart';
 
 class FirstPage extends StatefulWidget {
   const FirstPage({super.key});
@@ -48,6 +49,9 @@ class _FirstPageState extends State<FirstPage> with LoggerMixin {
 
   // 새로운 빈 아파트 객체를 생성하는 함수
   Apartment _createEmptyApartment() {
+    // EvaluationService의 categories getter를 통해 카테고리 목록을 가져옵니다
+    final categories = EvaluationService.categories?.keys.toList() ?? [];
+
     return Apartment(
       name: '',
       address: '',
@@ -59,11 +63,10 @@ class _FirstPageState extends State<FirstPage> with LoggerMixin {
       rating: 0.0,
       description: '',
       images: [],
-      checklist: [],
-      // 평가 관련 초기값 설정
+      checklist: categories, // 캐시된 카테고리 사용
       ratings: {'좋음': 0.0, '보통': 0.0, '나쁨': 0.0},
       ratingCounts: {'좋음': 0, '보통': 0, '나쁨': 0},
-      evaluationAnswers: {},
+      evaluationAnswers: EvaluationService.createEmptyAnswers(),
     );
   }
 
@@ -97,7 +100,7 @@ class _FirstPageState extends State<FirstPage> with LoggerMixin {
       appBar: AppBar(
         title: const Text('내 아파트 구하기'),
       ),
-      // 로딩 중이면 로딩 표시기를 보여주고, 아니면 탭 뷰를 표시
+      // 로딩 중이면 로딩 표시기를 보여주고, 아��면 탭 뷰를 표시
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : DefaultTabController(
@@ -116,7 +119,7 @@ class _FirstPageState extends State<FirstPage> with LoggerMixin {
                   Expanded(
                     child: TabBarView(
                       children: [
-                        // 리스트 뷰 - 당겨서 새로��침 가능
+                        // 리스트 뷰 - 당겨서 새로고침 가능
                         RefreshIndicator(
                           onRefresh: _loadApartments,
                           child: _apartments.isEmpty
@@ -127,7 +130,7 @@ class _FirstPageState extends State<FirstPage> with LoggerMixin {
                                     left: 16,
                                     right: 16,
                                     top: 16,
-                                    // FAB 높이만큼 bottom padding 추가
+                                    // FAB 높��만큼 bottom padding 추가
                                     bottom: 80,
                                   ),
                                   itemCount: _apartments.length,

@@ -22,23 +22,12 @@ class ChecklistSection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                // 카운트 값이 아님 초기 값 세팅하거나 값 가져오게 변경
-                // apartment.checklist.toString()
-                _buildCheckItem('전체'),
-                const SizedBox(width: 12),
-                _buildCheckItem('실내'),
-                const SizedBox(width: 12),
-                _buildCheckItem('친환'),
-                const SizedBox(width: 12),
-                _buildCheckItem('주방'),
-                const SizedBox(width: 12),
-                _buildCheckItem('거실'),
-                const SizedBox(width: 12),
-                _buildCheckItem('침실'),
-                const SizedBox(width: 12),
-                _buildCheckItem('화장실'),
-                const SizedBox(width: 12),
-                _buildCheckItem('현관'),
+                ...apartment.checklist.map((category) => Row(
+                      children: [
+                        _buildCheckItem(category),
+                        const SizedBox(width: 12),
+                      ],
+                    )),
               ],
             ),
           ),
@@ -54,13 +43,7 @@ class ChecklistSection extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade300),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label),
-          const SizedBox(width: 8),
-        ],
-      ),
+      child: Text(label),
     );
   }
 }

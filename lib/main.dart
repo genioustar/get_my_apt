@@ -1,49 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:get_my_apt/data/models/apartment.dart';
 import 'package:get_my_apt/screens/first_page.dart';
 import 'package:get_my_apt/services/evaluation_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-/// 앱 실행 시 기본으로 제공되는 샘플 아파트 데이터
-/// 사용자가 앱을 처음 실행할 때 이 데이터가 Hive 데이터베이스에 저장됩니다.
-final _sampleApartment = Apartment(
-  name: '[예시] 재건축 일동 우성아파트',
-  address: '서울 송파구 잠실동 101-1',
-  price: '7억',
-  maintenanceFee: '350,000원',
-  size: '42평(141m²)',
-  rooms: '4개, 화장실 2개',
-  floor: '현재 11층/전체 12층 중 2층',
-  rating: 4.0,
-  description: '즉시 입주 가능함...',
-  images: List.generate(6, (index) => 'image_$index.jpg'),
-  checklist: [
-    '전체',
-    '실내',
-    '친환',
-    '주방',
-    '현관',
-    '거실',
-    '침실',
-    '화장실',
-    '발코니',
-    '보안',
-    '주차',
-    '교통',
-    '편의시설',
-    '학군',
-  ],
-  ratings: {'좋음': 0.4, '보통': 0.5, '나쁨': 0.1},
-  ratingCounts: {'좋음': 11, '보통': 12, '나쁨': 2},
-  evaluationAnswers: {},
-);
-
 /// 앱의 시작점입니다.
-/// 여기서 필요한 초기화 작업을 수행합니다:
-/// 1. Flutter 바인딩 초기화
-/// 2. Hive 데이터베이스 초기화
-/// 3. Apartment 모델 어댑터 등록
-/// 4. 평가 서비스 초기화
 void main() async {
   // Flutter 엔진과 위젯 바인딩을 초기화합니다.
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,10 +21,34 @@ void main() async {
   // 평가 관련 서비스를 초기화합니다.
   await EvaluationService.initialize();
 
+  // evaluation_list.json에서 카테고리 키 값들을 읽어옵니다
+  final String jsonString =
+      await rootBundle.loadString('assets/evaluation_list.json');
+  final json = jsonDecode(jsonString);
+  final categories = (json['categories'] as Map<String, dynamic>).keys.toList();
+
+  // 샘플 아파트 데이터에 카테고리 키 값들을 설정합니다
+  final sampleApartment = Apartment(
+    name: '[예시] 재건축 일동 우성아파트',
+    address: '서울 송파구 잠실동 101-1',
+    price: '7억',
+    maintenanceFee: '350,000원',
+    size: '42평(141m²)',
+    rooms: '4개, 화장실 2개',
+    floor: '현재 11층/전체 12층 중 2층',
+    rating: 4.0,
+    description: '즉시 입주 가능함...',
+    images: List.generate(6, (index) => 'image_$index.jpg'),
+    checklist: categories, // JSON에서 읽어온 카테고리 키 값들로 설정
+    ratings: {'좋음': 0.4, '보통': 0.5, '나쁨': 0.1},
+    ratingCounts: {'좋음': 11, '보통': 12, '나쁨': 2},
+    evaluationAnswers: EvaluationService.createEmptyAnswers(),
+  );
+
   // 샘플 데이터를 Hive에 저장합니다 (앱 최초 실행 시에만)
   final box = await Hive.openBox<Apartment>('apartments');
   if (box.isEmpty) {
-    await box.put(_sampleApartment.storageKey, _sampleApartment);
+    await box.put(sampleApartment.storageKey, sampleApartment);
   }
 
   // MyApp 위젯으로 앱을 시작합니다.

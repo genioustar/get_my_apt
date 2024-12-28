@@ -63,4 +63,8 @@ class EvaluationService {
 
     return allQuestions;
   }
+
+  /// 카테고리 목록을 가져오는 getter 추가
+  static Map<String, Map<String, List<String>>>? get categories =>
+      _cachedCategories;
 }
