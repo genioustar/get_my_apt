@@ -32,21 +32,21 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen>
     _apartment = widget.apartment;
   }
 
-  void _loadApartment() async {
-    try {
-      final box = await Hive.openBox<Apartment>('apartments');
-      final apartment = box.get(_apartment.storageKey);
+  // void _loadApartment() async {
+  //   try {
+  //     final box = await Hive.openBox<Apartment>('apartments');
+  //     final apartment = box.get(_apartment.storageKey);
 
-      if (mounted && apartment != null) {
-        setState(() {
-          _apartment = apartment;
-        });
-      }
-      logger.i('로드된 아파트 데이터: ${apartment?.name ?? "없음"}');
-    } catch (e, stackTrace) {
-      logger.e('아파트 데이터 로드 실패', error: e, stackTrace: stackTrace);
-    }
-  }
+  //     if (mounted && apartment != null) {
+  //       setState(() {
+  //         _apartment = apartment;
+  //       });
+  //     }
+  //     logger.i('로드된 아파트 데이터: ${apartment?.name ?? "없음"}');
+  //   } catch (e, stackTrace) {
+  //     logger.e('아파트 데이터 로드 실패', error: e, stackTrace: stackTrace);
+  //   }
+  // }
 
   /// 아파트 정보를 Hive에 저장하는 메서드
   Future<void> _saveApartment() async {
@@ -54,7 +54,7 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen>
 
     try {
       final box = await Hive.openBox<Apartment>('apartments');
-      await box.put(_apartment.storageKey, _apartment);
+      await box.put(_apartment.key, _apartment);
       logger.i('아파트 정보 저장 완료: ${_apartment.name}');
 
       if (!mounted) return;
@@ -84,8 +84,14 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen>
         title: const Text('아파트 상세'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveApartment,
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              ApartmentInfoSection.showRegistrationDialog(
+                context,
+                _apartment,
+                _onApartmentUpdated,
+              );
+            },
           ),
         ],
       ),

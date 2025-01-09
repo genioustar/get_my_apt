@@ -18,7 +18,42 @@ class ApartmentInfoSection extends StatelessWidget {
 
   bool get _hasData => apartment.name.isNotEmpty;
 
-  void _showRegistrationDialog(BuildContext context) {
+  /// 가격 입력 필드를 생성하는 헬퍼 함수
+  static Widget buildPriceField(
+    String label,
+    String hint,
+    String suffix,
+    TextEditingController controller,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            hintText: hint,
+            suffixText: suffix,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Future<void> showRegistrationDialog(
+    BuildContext context,
+    Apartment apartment,
+    Function(Apartment)? onApartmentUpdated,
+  ) async {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -27,15 +62,48 @@ class ApartmentInfoSection extends StatelessWidget {
         ),
         child: StatefulBuilder(
           builder: (context, setState) {
-            final nameController = TextEditingController();
-            final dongController = TextEditingController();
-            final hoController = TextEditingController();
-            final priceController = TextEditingController();
-            final maintenanceFeeController = TextEditingController();
-            final sizeM2Controller = TextEditingController();
-            final sizePyeongController = TextEditingController();
-            final roomCountController = TextEditingController();
-            final bathroomCountController = TextEditingController();
+            final nameController = TextEditingController(text: apartment.name);
+            final dongController = TextEditingController(
+              text: apartment.address.split('동').first,
+            );
+            final hoController = TextEditingController(
+              text: apartment.address.contains('호')
+                  ? apartment.address.split('동').last.replaceAll('호', '').trim()
+                  : '',
+            );
+            final priceController =
+                TextEditingController(text: apartment.price);
+            final maintenanceFeeController =
+                TextEditingController(text: apartment.maintenanceFee);
+
+            String sizeM2 = '', sizePyeong = '';
+            if (apartment.size.isNotEmpty) {
+              final sizeMatch =
+                  RegExp(r'(\d+)m² \((\d+)평\)').firstMatch(apartment.size);
+              if (sizeMatch != null) {
+                sizeM2 = sizeMatch.group(1) ?? '';
+                sizePyeong = sizeMatch.group(2) ?? '';
+              }
+            }
+
+            final sizeM2Controller = TextEditingController(text: sizeM2);
+            final sizePyeongController =
+                TextEditingController(text: sizePyeong);
+
+            String rooms = '', bathrooms = '';
+            if (apartment.rooms.isNotEmpty) {
+              final roomMatch =
+                  RegExp(r'(\d+)개, 화장실 (\d+)개').firstMatch(apartment.rooms);
+              if (roomMatch != null) {
+                rooms = roomMatch.group(1) ?? '';
+                bathrooms = roomMatch.group(2) ?? '';
+              }
+            }
+
+            final roomCountController = TextEditingController(text: rooms);
+            final bathroomCountController =
+                TextEditingController(text: bathrooms);
+
             String contractType = '매매';
 
             return Container(
@@ -286,10 +354,9 @@ class ApartmentInfoSection extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () async {
-                          final newApartment = Apartment(
-                            name: nameController.text.isEmpty
-                                ? '${DateTime.now().toString().substring(0, 16)} 등록매물'
-                                : nameController.text,
+                          final updatedApartment = apartment.copyWith(
+                            key: apartment.key,
+                            name: nameController.text,
                             address:
                                 '${dongController.text}동 ${hoController.text}호',
                             price: priceController.text,
@@ -298,34 +365,25 @@ class ApartmentInfoSection extends StatelessWidget {
                                 '${sizeM2Controller.text}m² (${sizePyeongController.text}평)',
                             rooms:
                                 '${roomCountController.text}개, 화장실 ${bathroomCountController.text}개',
-                            floor: '',
-                            rating: 0.0,
-                            description: '',
-                            images: [],
-                            checklist: [],
-                            ratings: {},
-                            ratingCounts: {},
-                            evaluationAnswers: apartment.evaluationAnswers,
                           );
 
                           try {
                             final box =
                                 await Hive.openBox<Apartment>('apartments');
                             await box.put(
-                                newApartment.storageKey, newApartment);
+                                updatedApartment.key, updatedApartment);
 
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('매물 정보가 저장되었습니다')),
+                                const SnackBar(content: Text('매물 정보가 수정되었습니다')),
                               );
                               Navigator.pop(context);
-
-                              onApartmentUpdated?.call(newApartment);
+                              onApartmentUpdated?.call(updatedApartment);
                             }
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('저장 중 오류가 발생했습니다: $e')),
+                                SnackBar(content: Text('수정 중 오류가 발생했습니다: $e')),
                               );
                             }
                           }
@@ -364,7 +422,8 @@ class ApartmentInfoSection extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton(
-            onPressed: () => _showRegistrationDialog(context),
+            onPressed: () =>
+                showRegistrationDialog(context, apartment, onApartmentUpdated),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
@@ -421,31 +480,6 @@ class ApartmentInfoSection extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget buildPriceField(String label, String hint, String suffix,
-      TextEditingController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: hint,
-            suffixText: suffix,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

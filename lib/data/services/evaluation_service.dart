@@ -28,6 +28,7 @@ class EvaluationService {
     });
 
     final updatedApartment = Apartment(
+      key: apartment.key,
       name: apartment.name,
       address: apartment.address,
       price: apartment.price,
