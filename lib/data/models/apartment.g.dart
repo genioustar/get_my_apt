@@ -17,54 +17,57 @@ class ApartmentAdapter extends TypeAdapter<Apartment> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Apartment(
-      name: fields[0] as String,
-      address: fields[1] as String,
-      price: fields[2] as String,
-      maintenanceFee: fields[3] as String,
-      size: fields[4] as String,
-      rooms: fields[5] as String,
-      floor: fields[6] as String,
-      rating: fields[7] as double,
-      description: fields[8] as String,
-      images: (fields[9] as List).cast<String>(),
-      checklist: (fields[10] as List).cast<String>(),
-      ratings: (fields[11] as Map).cast<String, double>(),
-      ratingCounts: (fields[12] as Map).cast<String, int>(),
-      evaluationAnswers: (fields[13] as Map).cast<String, String>(),
+      key: fields[0] as String,
+      name: fields[1] as String,
+      address: fields[2] as String,
+      price: fields[3] as String,
+      maintenanceFee: fields[4] as String,
+      size: fields[5] as String,
+      rooms: fields[6] as String,
+      floor: fields[7] as String,
+      rating: fields[8] as double,
+      description: fields[9] as String,
+      images: (fields[10] as List).cast<String>(),
+      checklist: (fields[11] as List).cast<String>(),
+      ratings: (fields[12] as Map).cast<String, double>(),
+      ratingCounts: (fields[13] as Map).cast<String, int>(),
+      evaluationAnswers: (fields[14] as Map).cast<String, String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Apartment obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(15)
       ..writeByte(0)
-      ..write(obj.name)
+      ..write(obj.key)
       ..writeByte(1)
-      ..write(obj.address)
+      ..write(obj.name)
       ..writeByte(2)
-      ..write(obj.price)
+      ..write(obj.address)
       ..writeByte(3)
-      ..write(obj.maintenanceFee)
+      ..write(obj.price)
       ..writeByte(4)
-      ..write(obj.size)
+      ..write(obj.maintenanceFee)
       ..writeByte(5)
-      ..write(obj.rooms)
+      ..write(obj.size)
       ..writeByte(6)
-      ..write(obj.floor)
+      ..write(obj.rooms)
       ..writeByte(7)
-      ..write(obj.rating)
+      ..write(obj.floor)
       ..writeByte(8)
-      ..write(obj.description)
+      ..write(obj.rating)
       ..writeByte(9)
-      ..write(obj.images)
+      ..write(obj.description)
       ..writeByte(10)
-      ..write(obj.checklist)
+      ..write(obj.images)
       ..writeByte(11)
-      ..write(obj.ratings)
+      ..write(obj.checklist)
       ..writeByte(12)
-      ..write(obj.ratingCounts)
+      ..write(obj.ratings)
       ..writeByte(13)
+      ..write(obj.ratingCounts)
+      ..writeByte(14)
       ..write(obj.evaluationAnswers);
   }
 

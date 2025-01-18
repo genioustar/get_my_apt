@@ -23,7 +23,7 @@ class ApartmentStorageService {
 
   static Future<void> saveApartment(Apartment apartment) async {
     try {
-      await _box.put(apartment.address, apartment);
+      await _box.put(apartment.key, apartment);
       Log.instance.i('아파트 저장 완료: ${apartment.name}');
     } catch (e, stackTrace) {
       Log.instance.e('아파트 저장 실패', error: e, stackTrace: stackTrace);

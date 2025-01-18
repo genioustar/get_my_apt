@@ -29,6 +29,7 @@ void main() async {
 
   // 샘플 아파트 데이터에 카테고리 키 값들을 설정합니다
   final sampleApartment = Apartment(
+    key: 'sample_apartment',
     name: '[예시] 재건축 일동 우성아파트',
     address: '서울 송파구 잠실동 101-1',
     price: '7억',
@@ -48,7 +49,7 @@ void main() async {
   // 샘플 데이터를 Hive에 저장합니다 (앱 최초 실행 시에만)
   final box = await Hive.openBox<Apartment>('apartments');
   if (box.isEmpty) {
-    await box.put(sampleApartment.storageKey, sampleApartment);
+    await box.put(sampleApartment.key, sampleApartment);
   }
 
   // MyApp 위젯으로 앱을 시작합니다.

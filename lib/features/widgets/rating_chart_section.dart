@@ -172,6 +172,7 @@ class _RatingChartSectionState extends State<RatingChartSection> {
   Future<void> _updateApartmentEvaluation() async {
     try {
       final updatedApartment = Apartment(
+        key: widget.apartment.key,
         name: widget.apartment.name,
         address: widget.apartment.address,
         price: widget.apartment.price,
